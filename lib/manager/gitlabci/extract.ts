@@ -64,21 +64,22 @@ export function extractPackageFile(content: string): PackageFile | null {
       const services = /^\s*services:\s*$/.test(line); // TODO #12071  #12070
       if (services) {
         logger.trace(`Matched services on line ${lineNumber}`);
-        let foundImage: boolean;
+        let endedServiceSection: boolean;
         do {
-          foundImage = false;
+          endedServiceSection = false;
           const serviceImageLine = skipCommentLines(lines, lineNumber + 1);
           logger.trace(`serviceImageLine: "${serviceImageLine.line}"`);
           const serviceImageMatch = serviceRe.exec(serviceImageLine.line);
           if (serviceImageMatch) {
             logger.trace('serviceImageMatch');
-            foundImage = true;
             lineNumber = serviceImageLine.lineNumber;
             const dep = getDep(serviceImageMatch.groups.depName);
             dep.depType = 'service-image';
             deps.push(dep);
+          } else {
+            endedServiceSection = true;
           }
-        } while (foundImage);
+        } while (endedServiceSection);
       }
     }
   } catch (err) /* istanbul ignore next */ {
